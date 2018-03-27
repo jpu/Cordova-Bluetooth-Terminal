@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="rocks.loginov.cordova_bluetooth_terminal" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Cordova Bluetooth Terminal</name>
-    <description>Simple app for communication with devices via bluetooth</description>
-    <author email="danila@loginov.rocks" href="https://loginov.rocks">Danila Loginov</author>
+<widget id="com.hakety.jpu.storm32_droid_control" version="1.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Storm32 Droid Control</name>
+    <description>Android app for controlling a SToRM32 gimbal via Bluetooth</description>
+    <author email="jpu@hakety.com" href="https://hakety.com">jpu</author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
