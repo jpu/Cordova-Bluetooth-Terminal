@@ -1,6 +1,10 @@
 The MIT License (MIT)
 
 Copyright 2016 Danila Loginov
+for parts of the project created prior to the fork of 2018-03-27 (prior to SToRM32 specific features).
+
+Copyright 2018 jpu
+for the parts after the fork.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
