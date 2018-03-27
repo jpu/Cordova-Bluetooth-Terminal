@@ -1,22 +1,22 @@
 {
-    "name": "cordova-bluetooth-terminal",
+    "name": "storm32-droid-control",
     "version": "1.1.1",
-    "displayName": "Cordova Bluetooth Terminal",
-    "description": "Simple app for communication with devices via bluetooth",
+    "displayName": "SToRM32 Droid Control",
+    "description": "Android app for controlling a SToRM32 gimbal via Bluetooth",
     "keywords": [
         "cordova",
         "bluetooth",
-        "terminal",
+        "storm32",
         "serial"
     ],
-    "homepage": "https://github.com/1oginov/Cordova-Bluetooth-Terminal",
-    "bugs": "https://github.com/1oginov/Cordova-Bluetooth-Terminal/issues",
+    "homepage": "https://github.com/jpu/storm32-droid-control",
+    "bugs": "https://github.com/jpu/storm32-droid-control/issues",
     "repository": {
         "type": "git",
-        "url": "https://github.com/1oginov/Cordova-Bluetooth-Terminal.git"
+        "url": "https://github.com/jpu/storm32-droid-control.git"
     },
     "license": "MIT",
-    "author": "Danila Loginov <danila@loginov.rocks> (https://loginov.rocks)",
+    "author": "jpu <jpu@hakety.com> (https://hakety.com)",
     "cordova": {
         "platforms": [
             "android"
