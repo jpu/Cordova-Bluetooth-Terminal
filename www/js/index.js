@@ -8,7 +8,16 @@
 var app = {
 
     initialize: function () {
+        $('#run-test').click(app.runTest);
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+        if (typeof bluetoothSerial === 'undefined' || !bluetoothSerial){
+            console.log("Can't get bluetoothSerial. Are we on Android?");
+            app.goTo('test')
+        }
+    },
+
+    runTest: function(){
+        console.log("running test...");
     },
 
     onDeviceReady: function () {
@@ -22,7 +31,7 @@ var app = {
         $('#paired-devices form').submit(app.selectDevice);
         $('#toggle-connection').click(app.toggleConnection);
         $('#clear-data').click(app.clearData);
-        $('#terminal form').submit(app.sendData);
+        $('#terminal form').submit(app.sendData);       
 
         $('#terminal .go-back').click(function () {
             app.goTo('paired-devices');
@@ -158,6 +167,7 @@ var app = {
     },
 
     goTo: function (state) {
+        console.log("goTo: " +state );
         $('.state').hide();
         $('#' + state + '.state').show();
     },
