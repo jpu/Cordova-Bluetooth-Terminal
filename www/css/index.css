@@ -23,7 +23,7 @@ button, input, textarea {
 
 .state {
     position: absolute;
-    top: 0;
+    top: 0px;
     right: 0;
     bottom: 0;
     left: 0;
@@ -66,13 +66,15 @@ button, input, textarea {
 }
 
 #data {
-    border-top: 1px solid rgba(255, 255, 255, .5);
-    border-bottom: 1px solid rgba(255, 255, 255, .5);
-    flex-grow: 1;
+    /* border-top: 1px solid rgba(255, 255, 255, .5); */
+    /* border-bottom: 1px solid rgba(255, 255, 255, .5); */
+    /* flex-grow: 1; */
     font-family: monospace;
     overflow-x: auto;
     overflow-y: scroll;
     white-space: pre;
+    line-height: 1.1em;
+    font-size: 0.8em;
 }
 
 #data .in {

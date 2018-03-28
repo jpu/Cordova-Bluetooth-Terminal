@@ -10,19 +10,10 @@
     <link rel="stylesheet" type="text/css" href="lib/reset.css">
     <link rel="stylesheet" type="text/css" href="css/index.css">
 
-    <title>Cordova Bluetooth Terminal</title>
+    <title>SToRM32 Droid Control r20</title>
 
 </head>
 <body>
-
-<div id="test" class="state">
-
-    <div class="headline">
-        Test
-        <button id="run-test">Run</button>
-    </div>
-    
-</div>
 
 <div id="paired-devices" class="state">
 
@@ -51,11 +42,21 @@
     </div>
 
     <div>
+            <button id="up">Up</button>
+            <button id="down">Down</button>
+            <button id="left">Left</button>
+            <button id="right">Right</button>
+            <button id="center">Center</button>
+            <button id="standby">Standby</button>
+
+    </div>
+
+    <div>
         <label><input type="checkbox" name="autoscroll" value="1" checked> Auto scroll</label>
         <button id="clear-data">Clear</button>
     </div>
 
-    <div id="data"></div>
+    <pre id="data"></pre>
 
     <form>
         <input type="text" name="data">
@@ -64,9 +65,11 @@
 
 </div>
 
+
 <script type="text/javascript" src="cordova.js"></script>
 <script type="text/javascript" src="lib/jquery-3.1.1.min.js"></script>
 <script type="text/javascript" src="js/index.js"></script>
+<script type="text/javascript" src="js/storm.js"></script>
 
 </body>
 </html>

@@ -5,19 +5,28 @@
 
 'use strict';
 
+function toHexString(byteArray) {
+    return Array.from(byteArray, function(byte) {
+      return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+    }).join('')
+  }
+
+
 var app = {
 
     initialize: function () {
-        $('#run-test').click(app.runTest);
+        $('.state').hide();
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
         if (typeof bluetoothSerial === 'undefined' || !bluetoothSerial){
             console.log("Can't get bluetoothSerial. Are we on Android?");
-            app.goTo('test')
-        }
-    },
+            window.bluetoothSerial = {
+                write: function(str){
+                    console.log(toHexString(str));
+                }
 
-    runTest: function(){
-        console.log("running test...");
+            }
+            app.goTo('terminal');            
+        }
     },
 
     onDeviceReady: function () {
@@ -49,9 +58,12 @@ var app = {
 
             $list.text('');
             devices.forEach(function (device) {
-                $list.append('<label><input type="radio" name="device" value="' + device.address +
-                    '"><div><span class="name">' + device.name + '</span> <span class="address">' + device.address +
-                    '</span></div></label>');
+                // only show devices with "storm" or "spec" (testing) in the list
+                if (device.name.toLowerCase().indexOf("storm") > -1 || device.name.toLowerCase().indexOf("spec") > -1){
+                    $list.append('<label><input type="radio" name="device" value="' + device.address +
+                        '"><div><span class="name">' + device.name + '</span> <span class="address">' + device.address +
+                        '</span></div></label>');
+                }
             });
 
         }, app.showError);
@@ -145,6 +157,12 @@ var app = {
         bluetoothSerial.write(data, null, app.showError);
     },
 
+    sendString: function (str) {
+        console.log(str);
+        app.displayInTerminal(str + '\n', false);
+        bluetoothSerial.write(str, null, app.showError);
+    },
+
     displayInTerminal: function (data, isIncoming) {
         var $dataContainer = $('#data');
 
@@ -158,7 +176,7 @@ var app = {
         $dataContainer.append(data);
 
         if ($('#terminal input[name=autoscroll]').is(':checked')) {
-            $dataContainer.scrollTop($dataContainer[0].scrollHeight - $dataContainer.height());
+            $dataContainer.scrollTop($dataContainer[0].scrollHeight);
         }
     },
 
@@ -173,7 +191,8 @@ var app = {
     },
 
     showError: function (error) {
-        alert(error);
+        //alert(error);
+        console.error(error);
     }
 
 };
