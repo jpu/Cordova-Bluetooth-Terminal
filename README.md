@@ -11,6 +11,13 @@ Based on
 
 ## Quick Start
 
+### PhoneGap Build
+
+You can build and install an APK using [https://build.phonegap.com](https://build.phonegap.com)
+without installing anything.
+
+### Local build
+
 Make sure you have [cordova-cli](https://cordova.apache.org/) installed globally, install with the help of
 [npm](https://www.npmjs.com/) otherwise:
 
@@ -46,26 +53,38 @@ $ cordova run
 
 Emulator is useless here, because you need working bluetooth module.
 
-## Used
+## Refs
 * [BluetoothSerial](https://github.com/don/BluetoothSerial/) Cordova plugin
 * [jQuery 3.1.1](https://jquery.com/)
 * [Reset CSS](http://meyerweb.com/eric/tools/css/reset/)
 
-## Tests
-
-### Android APK
-
-You can build and install an APK using [https://build.phonegap.com](https://build.phonegap.com)
-without installing anything.
-
-### Using a SToRM32 gimbal
+## Usage
 
 #### Requirements
 * Smartphone (tablet, etc)
 * A SToRM32 controller board (tested using 1.32 board, on 0.96 software version)
 * Bluetooth module (tested with HC-06)
 
+#### Disclaimer
+
 Warning! This code is still work in progress, so try this first with your gimbal motors disabled (power using USB, not battery, or disconnect pitch & roll motors, for example).
 
-Install the Bluetooth module on the SToRM32 board. Pair your phone with the module. Install the APK on your phone. Run the app. Things should be simple enough from there.
+### First time use
+
+* Install the Bluetooth module on the SToRM32 board. 
+* Configure the Bluetooth module (see SToRM32 docs), give a name containing "storm" to the bluetooth adapter, either using the AT command or the o323bgc tool.
+* Pair your phone with the module. Default passcode is 1234.
+* Install the APK on your phone. 
+* Run the app. 
+
+Things should be simple enough from there.
+
+# Future
+
+This is currently just a proof of concept, and pretty limited in features. But it can be extended. 
+
+Some ideas: 
+* Actuate the gimbal according to phone orientation
+* Actuate the gimbal by object or smart tag tracking
+* Integrate IFTTT or other Android events
 
