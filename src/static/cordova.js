@@ -40,8 +40,8 @@ if (typeof cordova === 'undefined' || !cordova){
         //console.log("mockBluetoothSerial: sendMockData()");
         ;
       },
-      subscribeRaw: function(result, error){
-        console.log("mockBluetoothSerial: subscribeRaw()")
+      subscribeRawData: function(result, error){
+        console.log("mockBluetoothSerial: subscribeRawData()")
         window.temp1 = result;
         this.subscriberResult = result;
         this.subscriberError = error;
@@ -55,8 +55,8 @@ if (typeof cordova === 'undefined' || !cordova){
           console.error("  subscriberResult does not exist, unable to create dataGeneratorInterval");
         }
       },
-      unsubscribeRaw: function(result, error){
-        console.log("mockBluetoothSerial: ussubscribeRaw()")
+      unsubscribeRawData: function(result, error){
+        console.log("mockBluetoothSerial: ussubscribeRawData()")
         this.subscriberResult = null;
         this.subscriberError = null;
         clearInterval(this.dataGeneratorInterval);

@@ -5,10 +5,14 @@
       <div class="name">{{ $route.params.item.name }}</div>
       <button v-if="error" class="button error" v-on:click="errorClicked">ERROR</button>
     </div>
-    <div class="device" v-if="storm">
-      <div class="connecting" v-if="!bluetoothConnected">
+     <div class="connecting" v-if="bluetoothConnecting">
+        Connecting ...
+      </div>
+      <div class="connecting" v-if="!bluetoothConnecting && !bluetoothConnected">
         Disconnected
       </div>
+    <div class="device" v-if="!bluetoothConnecting">
+      
       <div class="controls" v-if="bluetoothConnected">
 
         <div class="row">
@@ -48,11 +52,13 @@ export default {
     return {
         name: null,
         error: false,
-        storm: null
+        storm: null,
+        bluetoothConnecting: true
     }
   },
   watch: {
     bluetoothConnected: function(newVal, oldVal){
+      bluetoothConnecting = false;
       if (newVal === true){
         console.log("bluetoothConnected changed to " + newVal);
       }
@@ -98,7 +104,7 @@ export default {
     onSerialDisconnectSuccess(){
       console.log("onSerialDisconnectSuccess()");
       //this.connected = false;
-      bluetoothSerial.unsubscribeRaw(
+      bluetoothSerial.unsubscribeRawData(
           this.onSerialUnsubscribeSuccess, 
           this.onSerialUnsubscribeError
         );
@@ -130,15 +136,19 @@ export default {
   async mounted (){
     try{
       await this.bluetoothConnectAsync(this.$route.params.item.id);
+      console.log("connected, now subscribe.");
+      bluetoothSerial.subscribeRawData(
+        this.onSerialDataReceived, 
+        this.onSerialError
+      );
+      this.storm = new Storm(bluetoothSerial.write);
+      this.error = false;
     } catch (ex){
-      console.error(ex);
+      console.error("Unable to connect to bluetooth device");
+      this.error = true;
+      this.bluetoothConnecting = false;
     }
-    console.log("connected, now subscribe.");
-    bluetoothSerial.subscribeRaw(
-      this.onSerialDataReceived, 
-      this.onSerialError
-    );
-    this.storm = new Storm(bluetoothSerial.write);
+    
   },
   async beforeDestroy(){
     try{
@@ -181,6 +191,10 @@ export default {
         color: white;
       }
     }
+  }
+  .connecting {
+    padding: 20px;
+    text-align: center;
   }
   .device {
     padding: 20px;
