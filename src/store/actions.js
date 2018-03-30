@@ -7,7 +7,7 @@ export const getBluetoothDeviceList = ({ commit }) => {
 		function (devices) {
 			window.devices = devices;
 			console.log(devices);
-			var list = devices.filter(d => d.class == 7936);
+			var list = devices.filter(d => (d.class == 7936 || d.name.toLowerCase().indexOf("spec") > -1));
 			commit(LIST, list);
 			commit(LOADING, false);
 		}, 
@@ -47,7 +47,8 @@ export const bluetoothDisconnectAsync = async function({ commit }){
 };
 
 export const bluetoothConnectAsync = async function({ commit }, deviceId){
-	console.log("bluetooth: store: bluetoothDisconnectAsync()")
+	console.log("bluetooth: store: bluetoothConnectAsync()")
+	commit(CONNECTED, false);
 	return new Promise((resolve, reject) => {
 		bluetoothSerial.connect( 
 			deviceId,
