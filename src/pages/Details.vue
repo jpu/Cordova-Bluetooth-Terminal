@@ -58,7 +58,7 @@ export default {
   },
   watch: {
     bluetoothConnected: function(newVal, oldVal){
-      bluetoothConnecting = false;
+      this.bluetoothConnecting = false;
       if (newVal === true){
         console.log("bluetoothConnected changed to " + newVal);
       }
