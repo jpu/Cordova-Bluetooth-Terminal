@@ -1,0 +1,9 @@
+https://github.com/KonradIT/gopro-udp-stream-android
+
+- FFmpeg udp://:8554 ==> 127.0.0.1 && LibVLC: Works but as the data is received the lag increases
+- FFmpeg udp://:8554 ==> 127.0.0.1 && ExoPlayer: Does not recognize udp protocol
+- FFmpeg udp://:8554 ==> 127.0.0.1 && Vitamio: Error with library
+
+
+https://github.com/KonradIT/goprowifihack/issues/83
+"FFmpeg-Android from Writing Minds. Learn to use it and adapt GoProStream to udp://127.0.0.1:1000 (see gopro-py-api). Then just play it using your favorite video library (I use Video view)"

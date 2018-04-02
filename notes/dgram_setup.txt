@@ -1,0 +1,15 @@
+
+# The JS (inject it with inspector)
+
+function onmessage(p1, p2, p3){ console.log(p1); console.log(p2); console.log(p3)}
+var mockbind = {
+	bind: function(p1,p2,p3){ console.log("mockbind: "+p1 + "," +p2+","+p3)}
+}
+var udpsock = dgram.createSocket('multicast-udp4', 8554)
+udpsock.on('message', onmessage)
+udpsock.bind(mockbind)
+
+
+# FFMpeg proxy on 10.5.5.101 (10.5.5.9 = gopro, 10.5.5.100 = phone, 10.5.5.101 = dev pc)
+
+ffmpeg -f mpegts -i udp://10.5.5.9:8554 -f mpeg1video -b 800k -r 25 udp://10.5.5.100:8554

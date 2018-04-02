@@ -1,0 +1,21 @@
+Show gopro live stream on the page with the gimbal controls
+
+- GoPro streams out a UDP stream
+- The browser isn't able to show a UDP stream video directly
+- Either
+    a) use a cordova extension which 
+        - uses ffmpeg to read the udp stream
+        - copies the stream to a websocket server
+        , and then
+        - connect to the websocket from the client js app
+        - use the jsmpeg lib to decode and show the stream
+    or
+    b) use a cordova extension which
+        - shows the udp video stream on an overlay on top 
+          of the client js app
+        , and modify the client js app to reserve 
+          some empty space for it
+    or
+    c) use a cordova extension which
+        - receives incoming udp stream
+       , and feed the udp stream to jsmpeg
