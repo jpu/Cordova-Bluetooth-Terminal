@@ -11,9 +11,10 @@ module.exports = (options, req) => ({
     },
     webpack(config) {
         // App js files on device
-        config.output.publicPath = "";
+        //config.output.publicPath = "";
         // App js files on dev server (with hot reload):
-        //config.output.publicPath = "http://192.168.8.115:4000/";
+        //config.output.publicPath = "http://192.168.8.100:4000/";
+        config.output.publicPath = "http://10.5.5.101:4000/";
         config.resolve.alias['vue$'] = 'vue/dist/vue.esm.js';
         // Note: To make sockjs client work using a dev server, with
         // your phone and your computer on the same local network,
