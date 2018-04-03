@@ -3,6 +3,19 @@
 if (typeof cordova === 'undefined' || !cordova){
     
     console.log("Can't get cordova. Are we on Android?");
+
+    console.log("Setting up a mock dgram...");
+
+    const mockDgram = {
+      createSocket: function(){
+        return {
+          on: function(){},
+          bind: function(){}
+        }
+      },
+    }
+    window.dgram = mockDgram;
+
     console.log("Setting up a mock bluetoothSerial...");
 
     const mockBluetoothSerial = {

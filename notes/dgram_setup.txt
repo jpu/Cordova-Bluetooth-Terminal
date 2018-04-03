@@ -13,3 +13,18 @@ udpsock.bind(mockbind)
 # FFMpeg proxy on 10.5.5.101 (10.5.5.9 = gopro, 10.5.5.100 = phone, 10.5.5.101 = dev pc)
 
 ffmpeg -f mpegts -i udp://10.5.5.9:8554 -f mpeg1video -b 800k -r 25 udp://10.5.5.100:8554
+
+
+# FFMpeg play sample using jsmpeg websocket-relay
+ffmpeg -re -i farbpp2.ts -f mpegts -vf scale=432:240 -codec:v mpeg1video -b 800k -r 25 -bf 0 -codec:a mp2 http://127.0.0.1:8082/publish
+or
+ffmpeg -re -i farbpp2.ts -f mpegts -codec:v mpeg1video -b 800k -r 25 -an http://127.0.0.1:8082/publish
+
+
+# Call GoPro (H4,H5,H6) restart stream once udp port is listening
+
+Start/restart stream:
+_axios.get("http://10.5.5.9/gp/gpControl/execute?p1=gpStream&a1=proto_v2&c1=restart").then(function(response){console.log(response)})
+
+Stop stream:
+_axios.get("http://10.5.5.9/gp/gpControl/execute?p1=gpStream&a1=proto_v2&c1=stop").then(function(response){console.log(response)})
