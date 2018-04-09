@@ -1,3 +1,0 @@
-[submodule "src/lib/jsmpeg"]
-	path = src/lib/jsmpeg
-	url = git@github.com:jpu/jsmpeg
