@@ -1,3 +1,12 @@
+# FFMPEG clean up GoPro UDP mpegts
+ffmpeg -f mpegts -i ts.ts -map 0:0 -map 0:1 -map 0:2 -codec copy -copy_unknown -streamid 0:4113 -streamid 1:4352 -streamid 2:512 -f mpegts re.ts
+
+# FFMPEG clean up GoPro UDP mpegts, video only:
+ffmpeg -f mpegts -i ts.ts -map 0:0 -codec copy -streamid 0:4113 -f mpegts re_vidonly.ts
+
+# FFMPEG clean up GoPro UDP mpegts, video only, standard stream id:
+ffmpeg -f mpegts -i ts.ts -map 0:0 -codec copy -f mpegts re_vidonly_stdstreamid.ts
+
 
 # The JS (inject it with inspector)
 
