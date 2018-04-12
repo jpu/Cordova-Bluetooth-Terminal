@@ -413,15 +413,15 @@ JSMpeg.BitBuffer = function() {
     BitBuffer.prototype.findNextNALMarker = function(code) {
         for (var i = this.index; i < this.byteLength; i++) {
             // NAL MARKER (with 09 48 as extra)
-            if (this.bytes[i] == 0 
-                && this.bytes[i+1] == 0 
-                && this.bytes[i+2] == 0 
-                && this.bytes[i+3] == 1 
+            if (this.bytes[i] == 0
+                && this.bytes[i+1] == 0
+                && this.bytes[i+2] == 0
+                && this.bytes[i+3] == 1
                 && this.bytes[i+4] == 9
                 && this.bytes[i+5] == 48
             ){
 
-                console.log("NAL START " + "i = " + i + " " 
+                console.log("NAL START " + "i = " + i + " "
                     + this.bytes[i+6] +" "
                     + this.bytes[i+7] + " "
                     + this.bytes[i+8] + " "
@@ -653,6 +653,7 @@ JSMpeg.Source.WebSocket = function() {
         this.established = false;
         this.progress = 0;
         this.reconnectTimeoutId = 0;
+        window._wsTotalBytes = 0;
     };
     WSSource.prototype.connect = function(destination) {
         this.destination = destination;
@@ -688,6 +689,7 @@ JSMpeg.Source.WebSocket = function() {
     };
     WSSource.prototype.onMessage = function(ev) {
         if (this.destination) {
+            window._wsTotalBytes += ev.data.byteLength;
             this.destination.write(ev.data);
         }
     };
@@ -714,7 +716,8 @@ JSMpeg.Demuxer.TS = function() {
             buffers: []
         };
     };
-    TS.prototype.write = function(buffer) {
+    TS.prototype.write = function(rawbuffer) {
+        var buffer = this.removePadding(rawbuffer);
         if (this.leftoverBytes) {
             var totalLength = buffer.byteLength + this.leftoverBytes.byteLength;
             this.bits = new JSMpeg.BitBuffer(totalLength);
@@ -726,6 +729,21 @@ JSMpeg.Demuxer.TS = function() {
         var leftoverCount = this.bits.byteLength - (this.bits.index >> 3);
         this.leftoverBytes = leftoverCount > 0 ? this.bits.bytes.subarray(this.bits.index >> 3) : null;
     };
+    TS.prototype.removePadding = function(rawAB){
+        //console.log("rawAB length : " + rawAB.byteLength);
+        var r = new Uint8Array(rawAB);
+        var clean = [];
+        for (var pkt = 0; pkt <= 7; pkt++){
+            if ( r[(188*pkt)+12] == 71 && r.byteLength >= ((pkt+1)*188)+12 ){
+                var maxlength = Math.min(r.byteLength, ((pkt+1)*188)+12);
+                for (var n = (pkt*188)+12; n < maxlength; n++){
+                    clean.push(r[n]);
+                }
+            }
+        }
+        var ret = new Uint8Array(clean);
+        return ret;
+    }
     TS.prototype.parsePacket = function() {
         if (this.bits.read(8) !== 71) {
             if (!this.resync()) {
@@ -794,14 +812,14 @@ JSMpeg.Demuxer.TS = function() {
         return true;
     };
     TS.prototype.resync = function() {
-        if (!this.bits.has(188 * 6 << 3)) {
+        if (!this.bits.has(188 * 3 << 3)) {
             return false;
         }
         var byteIndex = this.bits.index >> 3;
         for (var i = 0; i < 187; i++) {
             if (this.bits.bytes[byteIndex + i] === 71) {
                 var foundSync = true;
-                for (var j = 1; j < 5; j++) {
+                for (var j = 1; j < 2; j++) {
                     if (this.bits.bytes[byteIndex + i + 188 * j] !== 71) {
                         foundSync = false;
                         break;
@@ -929,49 +947,57 @@ JSMpeg.Decoder.MPEG1Video = function() {
     "use strict";
     var MPEG1 = function(options) {
         JSMpeg.Decoder.Base.call(this, options);
-        var bufferSize = options.videoBufferSize || 512 * 1024;
+        var bufferSize = options.videoBufferSize || 64 * 1024;
         var bufferMode = options.streaming ? JSMpeg.BitBuffer.MODE.EVICT : JSMpeg.BitBuffer.MODE.EXPAND;
         this.bits = new JSMpeg.BitBuffer(bufferSize, bufferMode);
         this.NALs = [];
         window.NALs = this.NALs;
         this.prevMarker = 0;
+        this.prevTime = Date.now();
+        window._mpeg1TotalBytes = 0;
     };
     MPEG1.prototype = Object.create(JSMpeg.Decoder.Base.prototype);
     MPEG1.prototype.constructor = MPEG1;
     MPEG1.prototype.write = function(pts, buffers) {
         JSMpeg.Decoder.Base.prototype.write.call(this, pts, buffers);
-            // console.log(this.bits.byteLength);
-            //var nalMarkers = 0;
-            for (var i = this.bits.index; i < this.bits.byteLength; i++) {
+            if (this.prevMarker > this.bits.byteLength){
+                this.prevMarker = 0;
+            }
+            for (var i = (this.bits.index >> 3); i < this.bits.byteLength; i++) {
                 // NAL MARKER (with 09 48 as extra)
-                if (this.bits.bytes[i] == 0 
-                    && this.bits.bytes[i+1] == 0 
-                    && this.bits.bytes[i+2] == 0 
-                    && this.bits.bytes[i+3] == 1 
+                if (this.bits.bytes[i] == 0
+                    && this.bits.bytes[i+1] == 0
+                    && this.bits.bytes[i+2] == 0
+                    && this.bits.bytes[i+3] == 1
                     && this.bits.bytes[i+4] == 9
-                    // && this.bits.bytes[i+5] == 48
+                    && this.bits.bytes[i+5] == 48
                 ){
                     if (this.prevMarker > 0){
-                        var dst = new ArrayBuffer(this.bits.index - this.prevMarker);
-                        new Uint8Array(dst).set(new Uint8Array(this.bits.bytes.slice(this.prevMarker-1, this.bits.index-1)));
-                        NALs.push(dst)
-                        window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
-                        //console.log(dst);
+
+                        //if (this.bits.index - this.prevMarker > 5000){
+                            var dst = new ArrayBuffer(i - this.prevMarker);
+                            new Uint8Array(dst).set(new Uint8Array(
+                                this.bits.bytes.slice(this.prevMarker-1, i-1)));
+                            // NALs.push(dst)
+                            // var duration = Date.now() - this.prevTime;
+                            window._mpeg1TotalBytes += dst.byteLength;
+                            // var bitrate = this.totalBytes / duration;
+                            window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
+
+                            console.log("ws: " + window._wsTotalBytes + ", nals: "+ window._mpeg1TotalBytes)                            //}
+                        //console.log("duration: " + duration + ", totalBytes = " + this.totalBytes
+                        // + ", bitrate: " + bitrate);
                     }
-                    this.prevMarker = this.bits.index;
-                    //nalMarkers++;
-                    this.bits.index = i+1;
+                    this.prevMarker = i;
+                    this.bits.index = (i << 3) + 1;
                 }
             }
-            //console.log(this.bits.index);
-                    // console.log("NAL START " + "i = " + i + " " 
-            //console.log("len: " + this.bits.byteLength + " , nals: " + nalMarkers);
-
-            //var newNAL = { start: null, end: null };
-            //this.NALs.push(newNAL);
-            //this.bits.findNALs(this.NALs);
+            // var dst = new ArrayBuffer(this.bits.bytes.length);
+            // new Uint8Array(dst).set(this.bits.bytes);
+            // window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
+            //this.bits.evict(100);
     };
- 
+
     MPEG1.prototype.frameRate = 25;
     MPEG1.prototype.decodeSequenceHeader = function() {
         this.framerate = 25;
@@ -985,6 +1011,23 @@ JSMpeg.Decoder.MPEG1Video = function() {
     };
     return MPEG1;
 }();
+
+function hx(arr){
+    var str = "";
+    for(var i = 0; i< arr.length; i+=16){
+      for (var j = 0; j < 16; j++){
+          if ( arr[i+j] != undefined ){
+              var hex = arr[i+j].toString(16);
+              str += (hex.length < 2 ? "0"+hex : hex)+ " ";
+          }
+      }
+      str += "\n";
+      //if(i > 6){
+          //break;
+      //}
+    }
+    console.log(str);
+  }
 
 
 

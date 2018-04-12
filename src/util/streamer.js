@@ -1,28 +1,55 @@
 var express = require('express');
 const WebSocket = require('ws');
 const path = require('path');
+const fs = require('fs');
 
 console.log('[livestream]', 'started');
 
 var STREAM_PORT =           8082;
 var WEBSOCKET_PORT =        8084;
-var STREAM_MAGIC_BYTES =    'jsmp';
 var width =                 432;
 var height =                240;
 
 var socketServer = new WebSocket.Server({port: WEBSOCKET_PORT});
 socketServer.on('connection', function(socket) {
-    // var streamHeader = new Buffer(8);
-    // streamHeader.write(STREAM_MAGIC_BYTES);
-    // streamHeader.writeUInt16BE(width, 4);
-    // streamHeader.writeUInt16BE(height, 6);
-    // socket.send(streamHeader, {binary:true});
     console.log( 'New WebSocket Connection ('+socketServer.clients.length+' total)' );
     console.log(this.clients);
     socket.on('close', function(code, message){
         console.log( 'Disconnected WebSocket ('+socketServer.clients.length+' total)' );
     });
+   
+    
+    fs.readFile('./util/ts2.ts',function(err,data){
+        
+        udpSendIndex = 0;
+        udps = [];
+        if(err){console.log(err); return;}
+        console.log("Sending file...")
+        for (var i=0; i<data.byteLength; i+=1328){
+            console.log(i)
+            udps.push(data.slice(i, i+1328));
+        }
+        console.log("Slices up!")
+        if (sendUdpInterval){
+            clearInterval(sendUdpInterval);
+        }
+        console.log("Setting up sendUdpInterval")
+        sendUdpInterval = setInterval(sendNextUdpPacket,1);
+       
+    });
 });
+
+var sendUdpInterval = null;
+var udpSendIndex = 0;
+var udps = [];
+
+function sendNextUdpPacket() {
+    //console.log("Sending udp packet " + udpSendIndex)
+    if (udpSendIndex < udps.length-1){
+        socketServer.broadcast(udps[udpSendIndex], {binary:true});
+        udpSendIndex++;
+    }
+}
 
 socketServer.broadcast = function(data, opts) {
     this.clients.forEach(function each(client) {
