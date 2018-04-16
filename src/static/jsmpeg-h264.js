@@ -362,7 +362,13 @@ JSMpeg.BitBuffer = function() {
         this.index = Math.min(this.index, this.byteLength << 3);
     };
     BitBuffer.prototype.evict = function(sizeNeeded) {
-        var bytePos = this.index >> 3, available = this.bytes.length - this.byteLength;
+        console.log("evict(" + sizeNeeded +")");
+       
+        var bytePos = this.index >> 3;
+        var available = this.bytes.length - this.byteLength;
+        console.log("  bits.index >> 3 was " + bytePos)
+        console.log("  bits.byteLength was " + this.byteLength)
+        console.log("  bits.bytes.length was " + this.bytes.length)
         if (this.index === this.byteLength << 3 || sizeNeeded > available + bytePos) {
             this.byteLength = 0;
             this.index = 0;
@@ -407,63 +413,12 @@ JSMpeg.BitBuffer = function() {
     };
     BitBuffer.prototype.appendSingleBuffer = function(buffer) {
         buffer = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-        this.bytes.set(buffer, this.byteLength);
+        try{
+            this.bytes.set(buffer, this.byteLength);
+        } catch (ex){
+            console.error(ex);
+        }
         this.byteLength += buffer.length;
-    };
-    BitBuffer.prototype.findNextNALMarker = function(code) {
-        for (var i = this.index; i < this.byteLength; i++) {
-            // NAL MARKER (with 09 48 as extra)
-            if (this.bytes[i] == 0
-                && this.bytes[i+1] == 0
-                && this.bytes[i+2] == 0
-                && this.bytes[i+3] == 1
-                && this.bytes[i+4] == 9
-                && this.bytes[i+5] == 48
-            ){
-
-                console.log("NAL START " + "i = " + i + " "
-                    + this.bytes[i+6] +" "
-                    + this.bytes[i+7] + " "
-                    + this.bytes[i+8] + " "
-                    + this.bytes[i+9] + " "
-                    + this.bytes[i+10] + " "
-                    + this.bytes[i+11]
-                )
-                var markerFoundAt = this.index + i;
-                this.index = markerFoundAt;
-                return markerFoundAt;
-            }
-        }
-        this.index == this.byteLength - 6;
-        return -1;
-    };
-    BitBuffer.prototype.findNALs = function(NALs) {
-        console.log("findNALs(), byteLength = " + this.byteLength);
-        var i = 0;
-        while (true) {
-            var lastNAL = NALs[NALs.length-1];
-            i++;
-            var marker = this.findNextNALMarker();
-            if (marker != -1){
-                if (lastNAL.start == null){
-                    //console.log("found NAL start at " + marker);
-                    lastNAL.start = marker;
-                } else if (lastNAL.end == null) {
-                    //console.log("found NAL end at " + marker);
-                    lastNAL.end = marker;
-                    console.log(lastNAL);
-                } else {
-                    NALs.push({ start: marker, end: null });
-                }
-            } else {
-                console.log("exiting after " + i + " iterations");
-                break;
-            }
-            if (i > 10){
-                break;
-            }
-        }
-        // return -1;
     };
     BitBuffer.prototype.nextBytesAreStartCode = function() {
         var i = this.index + 7 >> 3;
@@ -499,140 +454,6 @@ JSMpeg.BitBuffer = function() {
         EXPAND: 2
     };
     return BitBuffer;
-}();
-
-JSMpeg.Source.Ajax = function() {
-    "use strict";
-    var AjaxSource = function(url, options) {
-        this.url = url;
-        this.destination = null;
-        this.request = null;
-        this.completed = false;
-        this.established = false;
-        this.progress = 0;
-    };
-    AjaxSource.prototype.connect = function(destination) {
-        this.destination = destination;
-    };
-    AjaxSource.prototype.start = function() {
-        this.request = new XMLHttpRequest();
-        this.request.onreadystatechange = function() {
-            if (this.request.readyState === this.request.DONE && this.request.status === 200) {
-                this.onLoad(this.request.response);
-            }
-        }.bind(this);
-        this.request.onprogress = this.onProgress.bind(this);
-        this.request.open("GET", this.url);
-        this.request.responseType = "arraybuffer";
-        this.request.send();
-    };
-    AjaxSource.prototype.resume = function(secondsHeadroom) {};
-    AjaxSource.prototype.destroy = function() {
-        this.request.abort();
-    };
-    AjaxSource.prototype.onProgress = function(ev) {
-        this.progress = ev.loaded / ev.total;
-    };
-    AjaxSource.prototype.onLoad = function(data) {
-        this.established = true;
-        this.completed = true;
-        this.progress = 1;
-        if (this.destination) {
-            this.destination.write(data);
-        }
-    };
-    return AjaxSource;
-}();
-
-JSMpeg.Source.AjaxProgressive = function() {
-    "use strict";
-    var AjaxProgressiveSource = function(url, options) {
-        this.url = url;
-        this.destination = null;
-        this.request = null;
-        this.completed = false;
-        this.established = false;
-        this.progress = 0;
-        this.fileSize = 0;
-        this.loadedSize = 0;
-        this.chunkSize = options.chunkSize || 1024 * 1024;
-        this.isLoading = false;
-        this.loadStartTime = 0;
-        this.throttled = options.throttled !== false;
-        this.aborted = false;
-    };
-    AjaxProgressiveSource.prototype.connect = function(destination) {
-        this.destination = destination;
-    };
-    AjaxProgressiveSource.prototype.start = function() {
-        this.request = new XMLHttpRequest();
-        this.request.onreadystatechange = function() {
-            if (this.request.readyState === this.request.DONE) {
-                this.fileSize = parseInt(this.request.getResponseHeader("Content-Length"));
-                this.loadNextChunk();
-            }
-        }.bind(this);
-        this.request.onprogress = this.onProgress.bind(this);
-        this.request.open("HEAD", this.url);
-        this.request.send();
-    };
-    AjaxProgressiveSource.prototype.resume = function(secondsHeadroom) {
-        if (this.isLoading || !this.throttled) {
-            return;
-        }
-        var worstCaseLoadingTime = this.loadTime * 8 + 2;
-        if (worstCaseLoadingTime > secondsHeadroom) {
-            this.loadNextChunk();
-        }
-    };
-    AjaxProgressiveSource.prototype.destroy = function() {
-        this.request.abort();
-        this.aborted = true;
-    };
-    AjaxProgressiveSource.prototype.loadNextChunk = function() {
-        var start = this.loadedSize, end = Math.min(this.loadedSize + this.chunkSize - 1, this.fileSize - 1);
-        if (start >= this.fileSize || this.aborted) {
-            this.completed = true;
-            return;
-        }
-        this.isLoading = true;
-        this.loadStartTime = JSMpeg.Now();
-        this.request = new XMLHttpRequest();
-        this.request.onreadystatechange = function() {
-            if (this.request.readyState === this.request.DONE && this.request.status >= 200 && this.request.status < 300) {
-                this.onChunkLoad(this.request.response);
-            } else if (this.request.readyState === this.request.DONE) {
-                if (this.loadFails++ < 3) {
-                    this.loadNextChunk();
-                }
-            }
-        }.bind(this);
-        if (start === 0) {
-            this.request.onprogress = this.onProgress.bind(this);
-        }
-        this.request.open("GET", this.url + "?" + start + "-" + end);
-        this.request.setRequestHeader("Range", "bytes=" + start + "-" + end);
-        this.request.responseType = "arraybuffer";
-        this.request.send();
-    };
-    AjaxProgressiveSource.prototype.onProgress = function(ev) {
-        this.progress = ev.loaded / ev.total;
-    };
-    AjaxProgressiveSource.prototype.onChunkLoad = function(data) {
-        this.established = true;
-        this.progress = 1;
-        this.loadedSize += data.byteLength;
-        this.loadFails = 0;
-        this.isLoading = false;
-        if (this.destination) {
-            this.destination.write(data);
-        }
-        this.loadTime = JSMpeg.Now() - this.loadStartTime;
-        if (!this.throttled) {
-            this.loadNextChunk();
-        }
-    };
-    return AjaxProgressiveSource;
 }();
 
 JSMpeg.Source.WebSocket = function() {
@@ -678,6 +499,8 @@ JSMpeg.Source.WebSocket = function() {
     WSSource.prototype.onOpen = function() {
         this.progress = 1;
         this.established = true;
+        console.log("sending websocket message: start")
+        this.socket.send("start");
     };
     WSSource.prototype.onClose = function() {
         if (this.shouldAttemptReconnect) {
@@ -960,6 +783,22 @@ JSMpeg.Decoder.MPEG1Video = function() {
     MPEG1.prototype.constructor = MPEG1;
     MPEG1.prototype.write = function(pts, buffers) {
         JSMpeg.Decoder.Base.prototype.write.call(this, pts, buffers);
+            var totalLength = buffers.map(a => a.length).reduce((a,b) => a+b);
+            var dst = new Uint8Array(totalLength);
+            var lengthSoFar = 0;
+            for (var i = 0; i<buffers.length; i++){
+                try{
+                    dst.set(buffers[i], lengthSoFar);
+                    lengthSoFar += buffers[i].length;
+                } catch (ex){
+                    console.error(ex);
+                }
+
+            }
+            window._wfs.trigger('wfsH264DataParsing', {data: dst});
+            return;
+
+            console.log(buffers.length)
             if (this.prevMarker > this.bits.byteLength){
                 this.prevMarker = 0;
             }
@@ -972,10 +811,14 @@ JSMpeg.Decoder.MPEG1Video = function() {
                     && this.bits.bytes[i+4] == 9
                     && this.bits.bytes[i+5] == 48
                 ){
-                    if (this.prevMarker > 0){
+                    if (this.prevMarker > 0 && i > this.prevMarker){
 
                         //if (this.bits.index - this.prevMarker > 5000){
-                            var dst = new ArrayBuffer(i - this.prevMarker);
+                            try{
+                                var dst = new ArrayBuffer(i - this.prevMarker);
+                            } catch (ex) {
+                                console.err(ex);
+                            }
                             new Uint8Array(dst).set(new Uint8Array(
                                 this.bits.bytes.slice(this.prevMarker-1, i-1)));
                             // NALs.push(dst)
@@ -984,7 +827,7 @@ JSMpeg.Decoder.MPEG1Video = function() {
                             // var bitrate = this.totalBytes / duration;
                             window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
 
-                            console.log("ws: " + window._wsTotalBytes + ", nals: "+ window._mpeg1TotalBytes)                            //}
+                            //console.log("ws: " + window._wsTotalBytes + ", nals: "+ window._mpeg1TotalBytes)                            //}
                         //console.log("duration: " + duration + ", totalBytes = " + this.totalBytes
                         // + ", bitrate: " + bitrate);
                     }

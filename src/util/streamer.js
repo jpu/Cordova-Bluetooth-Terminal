@@ -17,34 +17,40 @@ socketServer.on('connection', function(socket) {
     socket.on('close', function(code, message){
         console.log( 'Disconnected WebSocket ('+socketServer.clients.length+' total)' );
     });
-   
-    
-    fs.readFile('./util/ts2.ts',function(err,data){
-        
-        udpSendIndex = 0;
-        udps = [];
-        if(err){console.log(err); return;}
-        console.log("Sending file...")
-        for (var i=0; i<data.byteLength; i+=1328){
-            console.log(i)
-            udps.push(data.slice(i, i+1328));
-        }
-        console.log("Slices up!")
+    socket.on('message', function(message){
+
         if (sendUdpInterval){
             clearInterval(sendUdpInterval);
         }
-        console.log("Setting up sendUdpInterval")
-        sendUdpInterval = setInterval(sendNextUdpPacket,1);
-       
-    });
+        //console.log("Setting up sendUdpInterval")
+        udpSendIndex = 0;
+        sendUdpInterval = setInterval(sendNextUdpPacket,1200);
+    })
 });
 
 var sendUdpInterval = null;
 var udpSendIndex = 0;
 var udps = [];
 
+fs.readFile('./util/ts2.ts',function(err,data){
+    udps = [];
+    if(err){console.log(err); return;}
+    console.log("Sending file...")
+    for (var i=0; i<data.byteLength; i+=1328){
+        console.log(i)
+        udps.push(data.slice(i, i+1328));
+    }
+    console.log("Slices up!")
+});
+
 function sendNextUdpPacket() {
     //console.log("Sending udp packet " + udpSendIndex)
+    if (udpSendIndex == 400){
+        console.log("at 1000");
+    } else if (udpSendIndex == 1400){
+        console.log("at 2000");
+    } 
+
     if (udpSendIndex < udps.length-1){
         socketServer.broadcast(udps[udpSendIndex], {binary:true});
         udpSendIndex++;
