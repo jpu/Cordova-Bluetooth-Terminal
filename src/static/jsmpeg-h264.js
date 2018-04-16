@@ -796,49 +796,53 @@ JSMpeg.Decoder.MPEG1Video = function() {
 
             }
             window._wfs.trigger('wfsH264DataParsing', {data: dst});
-            return;
+            //return;
 
-            console.log(buffers.length)
-            if (this.prevMarker > this.bits.byteLength){
+            //console.log(buffers.length)
+            if (this.prevMarker > dst.byteLength){
                 this.prevMarker = 0;
             }
-            for (var i = (this.bits.index >> 3); i < this.bits.byteLength; i++) {
+            var nalsMarkersInThisPacket = 0;
+            var nalStart = -1;
+            for (var i = 0; i < dst.byteLength-6; i++) {
                 // NAL MARKER (with 09 48 as extra)
-                if (this.bits.bytes[i] == 0
-                    && this.bits.bytes[i+1] == 0
-                    && this.bits.bytes[i+2] == 0
-                    && this.bits.bytes[i+3] == 1
-                    && this.bits.bytes[i+4] == 9
-                    && this.bits.bytes[i+5] == 48
+                var n = dst[i+4];
+                if (dst[i] == 0
+                    && dst[i+1] == 0
+                    && dst[i+2] == 0
+                    && dst[i+3] == 1
+                   
+                    //&& dst[i+4] == 9
+                    //&& dst[i+5] == 48
                 ){
-                    if (this.prevMarker > 0 && i > this.prevMarker){
-
-                        //if (this.bits.index - this.prevMarker > 5000){
-                            try{
-                                var dst = new ArrayBuffer(i - this.prevMarker);
-                            } catch (ex) {
-                                console.err(ex);
+                    if ( !(n == 6 || n == 33 ||  n == 9 || n == 37 || n == 39 || n == 40)){
+                        
+                        // no supported marker here
+                    } else {
+                        console.log("MARKER MARK: " + n);
+                        nalsMarkersInThisPacket++;
+                        if (nalStart > 0){
+                            // at end
+                            var nalPacket = new ArrayBuffer(dst.byteLength - nalStart);
+                            new Uint8Array(nalPacket).set(new Uint8Array(dst.slice(nalStart, dst.byteLength))); 
+                            if (6 ){//|| n == 37 || n == 9 || n == 6){
+                                window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(nalPacket) });
                             }
-                            new Uint8Array(dst).set(new Uint8Array(
-                                this.bits.bytes.slice(this.prevMarker-1, i-1)));
-                            // NALs.push(dst)
-                            // var duration = Date.now() - this.prevTime;
-                            window._mpeg1TotalBytes += dst.byteLength;
-                            // var bitrate = this.totalBytes / duration;
-                            window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
-
-                            //console.log("ws: " + window._wsTotalBytes + ", nals: "+ window._mpeg1TotalBytes)                            //}
-                        //console.log("duration: " + duration + ", totalBytes = " + this.totalBytes
-                        // + ", bitrate: " + bitrate);
+                            nalStart = -1;
+                        } else {
+                            nalStart = i;
+                        }
                     }
-                    this.prevMarker = i;
-                    this.bits.index = (i << 3) + 1;
+                    //console.log(nalsMarkersInThisPacket);
                 }
+                
             }
-            // var dst = new ArrayBuffer(this.bits.bytes.length);
-            // new Uint8Array(dst).set(this.bits.bytes);
-            // window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(dst) });
-            //this.bits.evict(100);
+            if (nalStart > -1){
+                var nalPacket = new ArrayBuffer(dst.byteLength - nalStart);
+                new Uint8Array(nalPacket).set(new Uint8Array(
+                    dst.slice(nalStart, dst.byteLength))); 
+                window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(nalPacket) });
+            }
     };
 
     MPEG1.prototype.frameRate = 25;

@@ -24,7 +24,7 @@ socketServer.on('connection', function(socket) {
         }
         //console.log("Setting up sendUdpInterval")
         udpSendIndex = 0;
-        sendUdpInterval = setInterval(sendNextUdpPacket,1200);
+        sendUdpInterval = setInterval(sendNextUdpPacket,1);
     })
 });
 
