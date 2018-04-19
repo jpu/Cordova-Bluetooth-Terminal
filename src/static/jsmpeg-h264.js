@@ -783,66 +783,19 @@ JSMpeg.Decoder.MPEG1Video = function() {
     MPEG1.prototype.constructor = MPEG1;
     MPEG1.prototype.write = function(pts, buffers) {
         JSMpeg.Decoder.Base.prototype.write.call(this, pts, buffers);
-            var totalLength = buffers.map(a => a.length).reduce((a,b) => a+b);
-            var dst = new Uint8Array(totalLength);
-            var lengthSoFar = 0;
-            for (var i = 0; i<buffers.length; i++){
-                try{
-                    dst.set(buffers[i], lengthSoFar);
-                    lengthSoFar += buffers[i].length;
-                } catch (ex){
-                    console.error(ex);
-                }
-
+        var totalLength = buffers.map(a => a.length).reduce((a,b) => a+b);
+        var dst = new Uint8Array(totalLength);
+        var lengthSoFar = 0;
+        for (var i = 0; i<buffers.length; i++){
+            try{
+                dst.set(buffers[i], lengthSoFar);
+                lengthSoFar += buffers[i].length;
+            } catch (ex){
+                console.error(ex);
             }
-            window._wfs.trigger('wfsH264DataParsing', {data: dst});
-            //return;
-
-            //console.log(buffers.length)
-            if (this.prevMarker > dst.byteLength){
-                this.prevMarker = 0;
-            }
-            var nalsMarkersInThisPacket = 0;
-            var nalStart = -1;
-            for (var i = 0; i < dst.byteLength-6; i++) {
-                // NAL MARKER (with 09 48 as extra)
-                var n = dst[i+4];
-                if (dst[i] == 0
-                    && dst[i+1] == 0
-                    && dst[i+2] == 0
-                    && dst[i+3] == 1
-                   
-                    //&& dst[i+4] == 9
-                    //&& dst[i+5] == 48
-                ){
-                    if ( !(n == 6 || n == 33 ||  n == 9 || n == 37 || n == 39 || n == 40)){
-                        
-                        // no supported marker here
-                    } else {
-                        console.log("MARKER MARK: " + n);
-                        nalsMarkersInThisPacket++;
-                        if (nalStart > 0){
-                            // at end
-                            var nalPacket = new ArrayBuffer(dst.byteLength - nalStart);
-                            new Uint8Array(nalPacket).set(new Uint8Array(dst.slice(nalStart, dst.byteLength))); 
-                            if (6 ){//|| n == 37 || n == 9 || n == 6){
-                                window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(nalPacket) });
-                            }
-                            nalStart = -1;
-                        } else {
-                            nalStart = i;
-                        }
-                    }
-                    //console.log(nalsMarkersInThisPacket);
-                }
-                
-            }
-            if (nalStart > -1){
-                var nalPacket = new ArrayBuffer(dst.byteLength - nalStart);
-                new Uint8Array(nalPacket).set(new Uint8Array(
-                    dst.slice(nalStart, dst.byteLength))); 
-                window._wfs.trigger('wfsH264DataParsing', {data: new Uint8Array(nalPacket) });
-            }
+        }
+        
+        window._wfs.trigger('wfsH264DataParsing', {data: dst});
     };
 
     MPEG1.prototype.frameRate = 25;

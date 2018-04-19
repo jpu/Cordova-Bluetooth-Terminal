@@ -40,7 +40,7 @@ export default {
        //this.h264Demuxer = new H264Demuxer(this.wfs);  
        window._wfs = this.wfs;
        //window._h264Demuxer = this.h264Demuxer;
-       this.player = new JSMpeg.Player(url, {canvas:null, videoBufferSize: 512*1024, source: JSMpeg.Source.WebSocket, audio: false});
+       this.player = new JSMpeg.Player(url, {canvas:null, videoBufferSize: 128*1024, source: JSMpeg.Source.WebSocket, audio: false});
        window._axios = Axios;
 
       //  axios.get('http://10.5.5.9/gp/gpControl/execute?p1=gpStream&a1=proto_v2&c1=restart')

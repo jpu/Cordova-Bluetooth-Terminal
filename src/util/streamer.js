@@ -24,7 +24,7 @@ socketServer.on('connection', function(socket) {
         }
         //console.log("Setting up sendUdpInterval")
         udpSendIndex = 0;
-        sendUdpInterval = setInterval(sendNextUdpPacket,1);
+        sendUdpInterval = setInterval(sendNextUdpPacket,7);
     })
 });
 
@@ -44,13 +44,6 @@ fs.readFile('./util/ts2.ts',function(err,data){
 });
 
 function sendNextUdpPacket() {
-    //console.log("Sending udp packet " + udpSendIndex)
-    if (udpSendIndex == 400){
-        console.log("at 1000");
-    } else if (udpSendIndex == 1400){
-        console.log("at 2000");
-    } 
-
     if (udpSendIndex < udps.length-1){
         socketServer.broadcast(udps[udpSendIndex], {binary:true});
         udpSendIndex++;
